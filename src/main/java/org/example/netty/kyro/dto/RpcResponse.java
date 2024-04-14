@@ -1,4 +1,4 @@
-package org.example.netty;
+package org.example.netty.kyro.dto;
 
 import lombok.*;
 
