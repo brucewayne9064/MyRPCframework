@@ -1,14 +1,14 @@
 package org.example.netty.kyro.client;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.sctp.nio.NioSctpChannel;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
+import io.netty.util.AttributeKey;
 import org.example.netty.kyro.codec.NettyKryoDecoder;
 import org.example.netty.kyro.codec.NettyKryoEncoder;
 import org.example.netty.kyro.serialize.KryoSerializer;
@@ -32,13 +32,14 @@ public class NettyClient {
 
     // 初始化相关资源比如 EventLoopGroup, Bootstrap
     static {
+        EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
         KryoSerializer kryoSerializer = new KryoSerializer();
         // 创建了一个Bootstrap实例，这是Netty客户端的启动类。
         b = new Bootstrap();
         //为客户端设置了一个EventLoopGroup，这是Netty中处理网络事件的核心组件。NioEventLoopGroup是基于NIO的事件循环组，负责处理网络I/O操作。在这里，它被用作客户端的网络操作处理组。
-        b.group(new NioEventLoopGroup())
+        b.group(eventLoopGroup)
                 //指定了客户端使用的通道类型为NioSctpChannel。这表明客户端将基于SCTP（Stream Control Transmission Protocol，流控制传输协议）进行通信。SCTP是一个面向消息的、可靠的、面向连接的传输层协议，通常用于需要可靠消息传输的场景。
-                .channel(NioSctpChannel.class)
+                .channel(NioSocketChannel.class)
                 //添加了一个日志处理器LoggingHandler，它用于记录网络操作的日志信息。LogLevel.INFO表示日志级别为INFO，这意味着只有INFO级别以上的日志信息会被记录和输出。
                 .handler(new LoggingHandler(LogLevel.INFO))
                 //设置了连接超时的时间为5000毫秒（5秒）。如果在5秒内客户端未能成功建立连接，那么连接尝试将被取消，并可能抛出超时异常。
@@ -67,10 +68,42 @@ public class NettyClient {
     */
     public RpcResponse sendMessage(RpcRequest rpcRequest){
         try{
-            ChannelFuture f;
-        }catch(){
+            ChannelFuture f = b.connect(host, port).sync();
+            logger.info("client connect {}", host + ":" + port);
+            Channel futureChannel = f.channel();
+            logger.info("send message");
+            if(futureChannel != null){
+                futureChannel.writeAndFlush(rpcRequest).addListener(future ->
+                {
+                    if(future.isSuccess()){
+                        logger.info("client send message : [{}]", rpcRequest.toString());
+                    }else{
+                        logger.error("send failed: [{}]", future.cause().getMessage());
+                    }
+                });
+                //阻塞等待 ，直到Channel关闭
+                futureChannel.closeFuture().sync();
+                // 将服务端返回的数据也就是RpcResponse对象取出
+                AttributeKey<RpcResponse> key = AttributeKey.valueOf("rpcResponse");
+                return futureChannel.attr(key).get();
 
+            }
+        }catch(InterruptedException e){
+            logger.error("occur exception when connect to server", e);
         }
         return null;
+    }
+
+    public static void main(String[] args) {
+        RpcRequest rpcRequest = RpcRequest.builder()
+                .interfaceName("interface")
+                .methodName("hello").build();
+
+        NettyClient nettyClient = new NettyClient("0.0.0.0", 8889);
+        for(int i = 0; i < 3; i++){
+            nettyClient.sendMessage(rpcRequest);
+        }
+        RpcResponse rpcResponse = nettyClient.sendMessage(rpcRequest);
+        System.out.println(rpcResponse);
     }
 }
