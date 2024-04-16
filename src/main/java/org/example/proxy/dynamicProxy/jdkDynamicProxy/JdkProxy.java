@@ -1,16 +1,15 @@
 package org.example.proxy.dynamicProxy.jdkDynamicProxy;
 
 import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-public class DebugInvocationHandler implements InvocationHandler{
+public class JdkProxy implements InvocationHandler{
     /**
      * 代理类中的真实对象
      */
     private final Object target;
 
-    public DebugInvocationHandler(Object target) {
+    public JdkProxy(Object target) {
         this.target = target;
     }
 

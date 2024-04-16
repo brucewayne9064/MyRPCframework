@@ -84,8 +84,21 @@ rpc框架可以帮助我们调用远程服务器上的某个方法，且过程�
 
 - 动态代理
 
+无需声明式创建Java代理类，而是在运行过程中生成“虚拟”的代理类，被ClassLoader加载。从而避免静态代理那样需要声明大量的代理类。
+
   - JDK动态代理
-  - CGLIB动态代理
+
+    主要的两个核心类为：java.lang.reflect.Proxy和java.lang.reflect.InvocationHandler
+
+      1. 定义一个接口及其实现类；
+      2. 自定义 InvocationHandler 并重写invoke方法，在 invoke 方法中我们会调用原生方法（被代理类的方法）并自定义一些处理逻辑；
+      3. 通过 Proxy.newProxyInstance(ClassLoader loader,Class<?>[] interfaces,InvocationHandler h) 方法创建代理对象；
+    
+    与静态代理相比，无论有多少接口，都只需要一个代理类。
+
+  - CGLIB动态代理（Code Generation Library）
+
+    然而JDK动态代理只能代理实现了接口的类，为了解决这个问题，可以使用CGLIB动态代理。
 
 
 ## ZooKeeper+Curator
