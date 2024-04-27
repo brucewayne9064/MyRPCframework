@@ -31,10 +31,10 @@
 ├── proxy (代理)
 │   ├── dynamicProxy (动态代理)
 │   │       ├── cglibDynamicProxy (CGLIB)
-│   │       │        ├── AliSmsService.java
-│   │       │        ├── CglibProxyFactory.java
+│   │       │        ├── AliSmsService.java (短信类)
+│   │       │        ├── CglibProxyFactory.java (代理工厂类)
 │   │       │        ├── Main.java
-│   │       │        └── cglibProxy.java
+│   │       │        └── cglibProxy.java (动态代理类)
 │   │       └── jdkDynamicProxy (JDK)
 │   │           ├── JdkProxy.java (JDK 动态代理类)
 │   │           ├── JdkProxyFactory.java (获取代理对象的工厂类)
