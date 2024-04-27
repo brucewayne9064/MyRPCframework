@@ -3,7 +3,7 @@ package org.example.proxy.dynamicProxy.cglibDynamicProxy;
 import net.sf.cglib.proxy.Enhancer;
 
 public class CglibProxyFactory {
-    public static Object getProxy(Class clazz){
+    public static Object getProxy(Class<?> clazz){
         //创建动态代理增强类
         Enhancer enhancer = new Enhancer();
         //设置类加载器
