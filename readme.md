@@ -25,6 +25,34 @@
     ├── HelloClient.java (客户端)
     ├── HelloServer.java (服务端)
     └── Message.java (消息实体类)
+    
+    
+
+├── proxy (代理)
+│   ├── dynamicProxy (动态代理)
+│   │       ├── cglibDynamicProxy (CGLIB)
+│   │       │        ├── AliSmsService.java
+│   │       │        ├── CglibProxyFactory.java
+│   │       │        ├── Main.java
+│   │       │        └── cglibProxy.java
+│   │       └── jdkDynamicProxy (JDK)
+│   │           ├── JdkProxy.java (JDK 动态代理类)
+│   │           ├── JdkProxyFactory.java (获取代理对象的工厂类)
+│   │           ├── MailService.java (发送邮件接口)
+│   │           ├── MailServiceImpl.java (发送邮件实现类)
+│   │           ├── Main.java
+│   │           ├── SmsService.java (发送短信接口)
+│   │           └── SmsServiceImpl.java (发送短信实现类)
+│   └── staticProxy (静态代理)
+│           ├── MailProxy.java (邮件代理)
+│           ├── MailService.java (发送邮件接口)
+│           ├── MailServiceImpl.java (发送邮件实现类)
+│           ├── Main.java
+│           ├── SmsProxy.java (短信代理)
+│           ├── SmsService.java (发送短信接口)
+│           └── SmsServiceImpl.java (发送短信实现类)
+└── zookeeper (zookeeper常用命令)
+        └── Main.java
 ~~~
 
 ## 一、什么是rpc
