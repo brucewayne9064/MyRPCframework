@@ -37,8 +37,8 @@ public class SocketRpcClient implements RpcRequestTransport {
     @Override
     public Object sendRpcRequest(RpcRequest rpcRequest) {
         InetSocketAddress inetSocketAddress = serviceDiscovery.lookupService(rpcRequest);
-        try (Socket socket = new Socket()) {
-            socket.connect(inetSocketAddress);
+        try (Socket socket = new Socket()) {  //创建一个新的Socket对象
+            socket.connect(inetSocketAddress);  //连接到InetSocketAddress指定的服务地址
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
             // 通过output stream向服务端传输data
             objectOutputStream.writeObject(rpcRequest);
