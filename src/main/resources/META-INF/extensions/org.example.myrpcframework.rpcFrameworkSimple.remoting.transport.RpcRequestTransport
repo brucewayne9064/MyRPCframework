@@ -1,1 +1,2 @@
 socket=org.example.myrpcframework.rpcFrameworkSimple.remoting.transport.socket.SocketRpcClient
+netty=

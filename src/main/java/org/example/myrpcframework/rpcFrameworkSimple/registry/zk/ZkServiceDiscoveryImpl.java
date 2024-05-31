@@ -3,6 +3,7 @@ package org.example.myrpcframework.rpcFrameworkSimple.registry.zk;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
+import org.example.myrpcframework.rpcFrameworkCommon.enums.LoadBalanceEnums;
 import org.example.myrpcframework.rpcFrameworkCommon.enums.RpcErrorMessageEnums;
 import org.example.myrpcframework.rpcFrameworkCommon.exception.RpcException;
 import org.example.myrpcframework.rpcFrameworkCommon.extension.ExtensionLoader;
@@ -22,7 +23,7 @@ public class ZkServiceDiscoveryImpl implements ServiceDiscovery {
     public ZkServiceDiscoveryImpl() {
         this.loadBalance = ExtensionLoader
                 .getExtensionLoader(LoadBalance.class)
-                .getExtension();
+                .getExtension(LoadBalanceEnums.LOADBALANCE.getName());
     }
 
     @Override
@@ -36,7 +37,7 @@ public class ZkServiceDiscoveryImpl implements ServiceDiscovery {
         if(CollectionUtil.isEmpty(serviceUrlList)){
             throw  new RpcException(RpcErrorMessageEnums.SERVICE_CAN_NOT_BE_FOUND, rpcServiceName);
         }
-        //
+        //利用一致性哈希负载均衡算法计算出rpcRequest应该使用哪一个zk结点提供的服务
         String targetServiceUrl = loadBalance.selectServiceAddress(serviceUrlList, rpcRequest);
         log.info("Successfully found the service address:[{}]", targetServiceUrl);
         String[] socketAddressArray = targetServiceUrl.split(":");

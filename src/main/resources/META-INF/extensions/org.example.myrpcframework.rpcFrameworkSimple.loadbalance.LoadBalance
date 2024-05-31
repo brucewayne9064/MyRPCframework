@@ -1,0 +1,1 @@
+loadBalance=org.example.myrpcframework.rpcFrameworkSimple.loadbalance.loadbalancer.ConsistentHashLoadBalance
