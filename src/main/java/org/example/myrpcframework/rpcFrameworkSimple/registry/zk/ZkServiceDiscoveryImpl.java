@@ -40,9 +40,9 @@ public class ZkServiceDiscoveryImpl implements ServiceDiscovery {
         //利用一致性哈希负载均衡算法计算出rpcRequest应该使用哪一个zk结点提供的服务
         String targetServiceUrl = loadBalance.selectServiceAddress(serviceUrlList, rpcRequest);
         log.info("Successfully found the service address:[{}]", targetServiceUrl);
-        String[] socketAddressArray = targetServiceUrl.split(":");
-        String host = socketAddressArray[0];  //ip
-        int port = Integer.parseInt(socketAddressArray[1]);  // 端口号
+        String[] socketAddressArray = targetServiceUrl.split(":");  //根据：分割地址
+        String host = socketAddressArray[0];  //ip是0号元素
+        int port = Integer.parseInt(socketAddressArray[1]);  // 端口号是1号元素
         return new InetSocketAddress(host, port);
     }
 }
