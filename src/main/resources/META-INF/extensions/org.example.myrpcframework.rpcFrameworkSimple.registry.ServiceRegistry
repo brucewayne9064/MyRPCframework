@@ -1,0 +1,1 @@
+zk=org.example.myrpcframework.rpcFrameworkSimple.registry.zk.ZkServiceRegistryImpl

@@ -30,12 +30,12 @@ public class CuratorUtil {
     private static final int BASE_SLEEP_TIME = 1000;  // retry的初始睡眠时间
     private static final int MAX_RETRIES = 3;  // 最大retry次数
 
-    //维护服务名称和其地址的映射关系
+    //维护服务名称和其地址的映射关系 <rpcServiceName, [ZK_REGISTER_ROOT_PATH + "/" + rpcServiceName + inetSocketAddress]>
     private static final Map<String, List<String>> SERVICE_ADDRESS_MAP = new ConcurrentHashMap<>();
     public static final String ZK_REGISTER_ROOT_PATH = "/my-rpc";
 
 
-    //存放存在的节点路径
+    //存放存在的服务地址[ZK_REGISTER_ROOT_PATH + "/" + rpcServiceName + inetSocketAddress]
     private static final Set<String> REGISTERED_PATH_SET = ConcurrentHashMap.newKeySet();
 
 
@@ -54,6 +54,8 @@ public class CuratorUtil {
         }
     }
 
+
+    //清除在ZooKeeper注册中心注册的特定服务器上的所有服务
     public static void clearRegistry(CuratorFramework zkClient, InetSocketAddress inetSocketAddress) {
         REGISTERED_PATH_SET.stream().parallel().forEach(p -> {
             try{
@@ -132,8 +134,5 @@ public class CuratorUtil {
         pathChildrenCache.getListenable().addListener(pathChildrenCacheListener);
         pathChildrenCache.start();
     }
-
-
-
 
 }

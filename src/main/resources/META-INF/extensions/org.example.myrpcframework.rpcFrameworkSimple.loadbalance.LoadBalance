@@ -1,1 +1,2 @@
-loadBalance=org.example.myrpcframework.rpcFrameworkSimple.loadbalance.loadbalancer.ConsistentHashLoadBalance
+CHloadBalance=org.example.myrpcframework.rpcFrameworkSimple.loadbalance.loadbalancer.ConsistentHashLoadBalance
+RloadBalance=org.example.myrpcframework.rpcFrameworkSimple.loadbalance.loadbalancer.RandomLoadBalance
