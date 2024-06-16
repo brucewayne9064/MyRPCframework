@@ -1,6 +1,7 @@
 package org.example.myrpcframework.rpcFrameworkCommon.utils.threadpool;
 
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -70,19 +71,46 @@ public class ThreadPoolFactoryUtil {
     }
 
     private static ExecutorService createThreadPool(CustomThreadPoolConfig customThreadPoolConfig, String threadNamePrefix, Boolean daemon){
+        ThreadFactory threadFactory = createThreadFactory(threadNamePrefix, daemon);
+
+        return new ThreadPoolExecutor(customThreadPoolConfig.getCorePoolSize(), customThreadPoolConfig.getMaxPoolSize(),
+                customThreadPoolConfig.getKeepAliveTime(), customThreadPoolConfig.getTimeUnit(), customThreadPoolConfig.getWorkQueue(),
+                threadFactory);
 
     }
 
+    //创建 ThreadFactory，用于产生新线程 。如果threadNamePrefix不为空则使用自建ThreadFactory，否则使用defaultThreadFactory
+    //daemon指定创建的线程是否是守护线程，守护线程是一种在没有非守护线程运行时自动结束的线程。
     public static ThreadFactory createThreadFactory(String threadNamePrefix, Boolean daemon){
-
+        if(threadNamePrefix != null){
+            if(daemon != null){
+                return new ThreadFactoryBuilder()
+                        .setNameFormat(threadNamePrefix + "-%d") // threadNamePrefix-1，threadNamePrefix-2 这种线程名称
+                        .setDaemon(daemon)
+                        .build();
+            } else {
+                return new ThreadFactoryBuilder()
+                        .setNameFormat(threadNamePrefix + "-%d")
+                        .build();
+            }
+        }else return Executors.defaultThreadFactory();
     }
 
+
+    //定期打印线程池的状态
     public static void printThreadPoolStatus(ThreadPoolExecutor threadPool){
+        ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(
+                1,
+                createThreadFactory("print-thread-pool-status", false));
 
+        scheduledExecutorService.scheduleAtFixedRate(()->{
+            log.info("============ThreadPool Status=============");
+            log.info("ThreadPool Size: [{}]", threadPool.getPoolSize());
+            log.info("Active Threads: [{}]", threadPool.getActiveCount());
+            log.info("Number of Tasks : [{}]", threadPool.getCompletedTaskCount());
+            log.info("Number of Tasks in Queue: {}", threadPool.getQueue().size());
+            log.info("===========================================");
+        }, 0 , 1, TimeUnit.SECONDS);
     }
-
-
-
-
 
 }
