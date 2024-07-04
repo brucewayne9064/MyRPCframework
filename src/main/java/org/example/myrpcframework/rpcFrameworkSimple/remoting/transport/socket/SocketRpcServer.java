@@ -34,6 +34,7 @@ public class SocketRpcServer {
     public void start(){
         try(ServerSocket server = new ServerSocket()){
             String host = InetAddress.getLocalHost().getHostAddress();
+            log.info("server host:{}",host);
             server.bind(new InetSocketAddress(host, NettyRpcServer.PORT));
             CustomShutdownHook.getCustomShutdownHook().clearAll();
             Socket socket;
