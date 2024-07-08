@@ -1,5 +1,6 @@
 package org.example.myrpcframework.rpcFrameworkSimple.proxy;
 
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.example.myrpcframework.rpcFrameworkCommon.enums.RpcErrorMessageEnums;
 import org.example.myrpcframework.rpcFrameworkCommon.enums.RpcResponseCodeEnums;
@@ -48,6 +49,8 @@ public class RpcClientProxy implements InvocationHandler {
      */
     @Override
     @SuppressWarnings("unchecked")
+    //指示编译器在该方法或类中抛出异常时，不强制要求调用者处理这些异常。
+    @SneakyThrows
     public Object invoke(Object proxy, Method method, Object[] args){
         log.info("invoked method: [{}]", method.getName());
         RpcRequest rpcRequest = RpcRequest.builder().methodName(method.getName())
@@ -65,10 +68,11 @@ public class RpcClientProxy implements InvocationHandler {
             rpcResponse = (RpcResponse<Object>) rpcRequestTransport.sendRpcRequest(rpcRequest);
         }
 
-        this.cheack();
+        this.check(rpcResponse, rpcRequest);
+        return rpcResponse.getData();
     }
 
-    private void cheack(RpcResponse<Object> rpcResponse, RpcRequest rpcRequest){
+    private void check(RpcResponse<Object> rpcResponse, RpcRequest rpcRequest){
         if (rpcResponse == null) {
             throw new RpcException(RpcErrorMessageEnums.SERVICE_INVOCATION_FAILURE, INTERFACE_NAME + ":" + rpcRequest.getInterfaceName());
         }
