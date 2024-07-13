@@ -12,7 +12,7 @@ public class RpcConstants {
     public static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
     // version information, 定义了RPC协议的版本号，这有助于处理不同版本的兼容性问题。
     public static final byte VERSION = 1;
-    // 定义了 ??? 的总长度，这里是16个字节。
+    // 定义了 ??? 的总长度，这里是16个字节。  说明总长度至少16字节，也就是（头部+0）
     public static final byte TOTAL_LENGTH = 16;
     // 分别定义了请求和响应消息的类型标识。
     public static final byte REQUEST_TYPE = 1;

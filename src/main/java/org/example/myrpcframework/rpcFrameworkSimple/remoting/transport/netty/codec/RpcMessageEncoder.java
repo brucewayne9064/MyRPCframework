@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.myrpcframework.rpcFrameworkCommon.enums.CompressTypeEnums;
 import org.example.myrpcframework.rpcFrameworkCommon.enums.SerializationTypeEnums;
 import org.example.myrpcframework.rpcFrameworkCommon.extension.ExtensionLoader;
+import org.example.myrpcframework.rpcFrameworkSimple.compress.Compress;
 import org.example.myrpcframework.rpcFrameworkSimple.remoting.constants.RpcConstants;
 import org.example.myrpcframework.rpcFrameworkSimple.remoting.dto.RpcMessage;
 import org.example.myrpcframework.rpcFrameworkSimple.serialize.Serializer;
@@ -67,20 +68,20 @@ public class RpcMessageEncoder extends MessageToByteEncoder<RpcMessage> {
                         .getExtension(codecName);                                          //得到序列化器 kryo
                 bodyBytes = serializer.serialize(rpcMessage.getData());  // 把正文部分序列化了
                 // compress the bytes
-                String compressName = CompressTypeEnums.getName(rpcMessage.getCompress()); //压缩方法名
+                String compressName = CompressTypeEnums.getName(rpcMessage.getCompress()); //压缩方法名 gzip
                 Compress compress = ExtensionLoader.getExtensionLoader(Compress.class)
                         .getExtension(compressName);                                       // 得到压缩器
-                bodyBytes = compress.compress(bodyBytes);
-                fullLength += bodyBytes.length;
+                bodyBytes = compress.compress(bodyBytes);  // 把正文部分进行压缩
+                fullLength += bodyBytes.length;  // 把全部长度加上正文长度
             }
 
             if (bodyBytes != null) {
-                out.writeBytes(bodyBytes);
+                out.writeBytes(bodyBytes);  // body
             }
-            int writeIndex = out.writerIndex();
-            out.writerIndex(writeIndex - fullLength + RpcConstants.MAGIC_NUMBER.length + 1);
-            out.writeInt(fullLength);
-            out.writerIndex(writeIndex);
+            int writeIndex = out.writerIndex();  // 获取当前ByteBuf的写索引位置，即下一个要写入字节的位置。
+            out.writerIndex(writeIndex - fullLength + RpcConstants.MAGIC_NUMBER.length + 1);  //回到full length那个字段的开头位置
+            out.writeInt(fullLength); // 写入full length
+            out.writerIndex(writeIndex); // 又回到最新位置
         } catch (Exception e) {
             log.error("Encode request error!", e);
         }
