@@ -1,0 +1,3 @@
+kryo=org.example.myrpcframework.rpcFrameworkSimple.serialize.kryo.KryoSerializer
+protostuff=
+hessian=org.example.myrpcframework.rpcFrameworkSimple.serialize.hessian.HessianSerializer

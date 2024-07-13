@@ -6,9 +6,11 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 import lombok.extern.slf4j.Slf4j;
 import org.example.myrpcframework.rpcFrameworkCommon.enums.CompressTypeEnums;
+import org.example.myrpcframework.rpcFrameworkCommon.enums.SerializationTypeEnums;
 import org.example.myrpcframework.rpcFrameworkCommon.extension.ExtensionLoader;
 import org.example.myrpcframework.rpcFrameworkSimple.remoting.constants.RpcConstants;
 import org.example.myrpcframework.rpcFrameworkSimple.remoting.dto.RpcMessage;
+import org.example.myrpcframework.rpcFrameworkSimple.serialize.Serializer;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -43,15 +45,15 @@ public class RpcMessageEncoder extends MessageToByteEncoder<RpcMessage> {
     @Override
     protected void encode(ChannelHandlerContext ctx, RpcMessage rpcMessage, ByteBuf out) {
         try {
-            out.writeBytes(RpcConstants.MAGIC_NUMBER);
-            out.writeByte(RpcConstants.VERSION);
+            out.writeBytes(RpcConstants.MAGIC_NUMBER);  // 魔法数
+            out.writeByte(RpcConstants.VERSION);        // RPC协议的版本号
             // leave a place to write the value of full length
-            out.writerIndex(out.writerIndex() + 4);
+            out.writerIndex(out.writerIndex() + 4);  // 留位置写full length
             byte messageType = rpcMessage.getMessageType();
-            out.writeByte(messageType);
-            out.writeByte(rpcMessage.getCodec());
-            out.writeByte(CompressTypeEnums.GZIP.getCode());
-            out.writeInt(ATOMIC_INTEGER.getAndIncrement());
+            out.writeByte(messageType);                 // messageType
+            out.writeByte(rpcMessage.getCodec());       // Codec序列化类型
+            out.writeByte(CompressTypeEnums.GZIP.getCode());  // compress压缩类型: gzip
+            out.writeInt(ATOMIC_INTEGER.getAndIncrement());  //  RequestId
             // build full length
             byte[] bodyBytes = null;
             int fullLength = RpcConstants.HEAD_LENGTH;
@@ -59,15 +61,15 @@ public class RpcMessageEncoder extends MessageToByteEncoder<RpcMessage> {
             if (messageType != RpcConstants.HEARTBEAT_REQUEST_TYPE
                     && messageType != RpcConstants.HEARTBEAT_RESPONSE_TYPE) {
                 // serialize the object
-                String codecName = SerializationTypeEnums.getName(rpcMessage.getCodec());
+                String codecName = SerializationTypeEnums.getName(rpcMessage.getCodec());  // 得到序列化方式的名称
                 log.info("codec name: [{}] ", codecName);
                 Serializer serializer = ExtensionLoader.getExtensionLoader(Serializer.class)
-                        .getExtension(codecName);
-                bodyBytes = serializer.serialize(rpcMessage.getData());
+                        .getExtension(codecName);                                          //得到序列化器 kryo
+                bodyBytes = serializer.serialize(rpcMessage.getData());  // 把正文部分序列化了
                 // compress the bytes
-                String compressName = CompressTypeEnums.getName(rpcMessage.getCompress());
+                String compressName = CompressTypeEnums.getName(rpcMessage.getCompress()); //压缩方法名
                 Compress compress = ExtensionLoader.getExtensionLoader(Compress.class)
-                        .getExtension(compressName);
+                        .getExtension(compressName);                                       // 得到压缩器
                 bodyBytes = compress.compress(bodyBytes);
                 fullLength += bodyBytes.length;
             }
