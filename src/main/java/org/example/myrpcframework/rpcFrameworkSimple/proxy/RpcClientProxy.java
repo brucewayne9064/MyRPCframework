@@ -9,12 +9,14 @@ import org.example.myrpcframework.rpcFrameworkSimple.config.RpcServiceConfig;
 import org.example.myrpcframework.rpcFrameworkSimple.remoting.dto.RpcRequest;
 import org.example.myrpcframework.rpcFrameworkSimple.remoting.dto.RpcResponse;
 import org.example.myrpcframework.rpcFrameworkSimple.remoting.transport.RpcRequestTransport;
+import org.example.myrpcframework.rpcFrameworkSimple.remoting.transport.netty.client.NettyRpcClient;
 import org.example.myrpcframework.rpcFrameworkSimple.remoting.transport.socket.SocketRpcClient;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class RpcClientProxy implements InvocationHandler {
@@ -63,6 +65,14 @@ public class RpcClientProxy implements InvocationHandler {
                 .build();
 
         RpcResponse<Object> rpcResponse = null;
+
+
+//        当 rpc 请求被成功处理（客户端收到服务端的执行结果）之后，我们调用了 unprocessedRequests.complete(rpcResponse) 方法，
+//        这样的话，你只需要通过下面的方式就能成功接收到服务端返回的结果。
+        if (rpcRequestTransport instanceof NettyRpcClient) {
+            CompletableFuture<RpcResponse<Object>> completableFuture = (CompletableFuture<RpcResponse<Object>>) rpcRequestTransport.sendRpcRequest(rpcRequest);
+            rpcResponse = completableFuture.get();
+        }
 
         if(rpcRequestTransport instanceof SocketRpcClient){
             rpcResponse = (RpcResponse<Object>) rpcRequestTransport.sendRpcRequest(rpcRequest);
