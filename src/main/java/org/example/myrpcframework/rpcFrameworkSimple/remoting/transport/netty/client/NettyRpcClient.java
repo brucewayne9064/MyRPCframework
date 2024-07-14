@@ -11,11 +11,16 @@ import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.timeout.IdleStateHandler;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.example.myrpcframework.rpcFrameworkCommon.enums.CompressTypeEnums;
+import org.example.myrpcframework.rpcFrameworkCommon.enums.SerializationTypeEnums;
 import org.example.myrpcframework.rpcFrameworkCommon.enums.ServiceDiscoveryEnums;
 import org.example.myrpcframework.rpcFrameworkCommon.extension.ExtensionLoader;
 import org.example.myrpcframework.rpcFrameworkCommon.factory.SingletonFactory;
 import org.example.myrpcframework.rpcFrameworkSimple.registry.ServiceDiscovery;
+import org.example.myrpcframework.rpcFrameworkSimple.remoting.constants.RpcConstants;
+import org.example.myrpcframework.rpcFrameworkSimple.remoting.dto.RpcMessage;
 import org.example.myrpcframework.rpcFrameworkSimple.remoting.dto.RpcRequest;
+import org.example.myrpcframework.rpcFrameworkSimple.remoting.dto.RpcResponse;
 import org.example.myrpcframework.rpcFrameworkSimple.remoting.transport.RpcRequestTransport;
 import org.example.myrpcframework.rpcFrameworkSimple.remoting.transport.netty.codec.RpcMessageDecoder;
 import org.example.myrpcframework.rpcFrameworkSimple.remoting.transport.netty.codec.RpcMessageEncoder;
@@ -65,9 +70,37 @@ public class NettyRpcClient implements RpcRequestTransport {
 
     @Override
     public Object sendRpcRequest(RpcRequest rpcRequest) {
-        return null;
+        // build return value
+        CompletableFuture<RpcResponse<Object>> resultFuture = new CompletableFuture<>();
+        // get server address
+        InetSocketAddress inetSocketAddress = serviceDiscovery.lookupService(rpcRequest);
+        // get  server address related channel
+        Channel channel = getChannel(inetSocketAddress);
+        if (channel.isActive()) {
+            // put unprocessed request
+            unprocessedRequests.put(rpcRequest.getRequestId(), resultFuture);
+            RpcMessage rpcMessage = RpcMessage.builder().data(rpcRequest)
+                    .codec(SerializationTypeEnums.HESSIAN.getCode())
+                    .compress(CompressTypeEnums.GZIP.getCode())
+                    .messageType(RpcConstants.REQUEST_TYPE).build();
+            channel.writeAndFlush(rpcMessage).addListener((ChannelFutureListener) future -> {
+                if (future.isSuccess()) {
+                    log.info("client send message: [{}]", rpcMessage);
+                } else {
+                    future.channel().close();
+                    resultFuture.completeExceptionally(future.cause());
+                    log.error("Send failed:", future.cause());
+                }
+            });
+        } else {
+            throw new IllegalStateException();
+        }
+
+        return resultFuture;
     }
 
+
+    // connect server and get the channel ,so that you can send rpc message to server
     @SneakyThrows
     public Channel doConnect(InetSocketAddress inetSocketAddress){
         CompletableFuture<Channel> completableFuture = new CompletableFuture<>();
@@ -83,10 +116,15 @@ public class NettyRpcClient implements RpcRequestTransport {
     }
 
     public Channel getChannel(InetSocketAddress inetSocketAddress){
-        return null;
+        Channel channel = channelProvider.get(inetSocketAddress);
+        if (channel == null) {
+            channel = doConnect(inetSocketAddress);
+            channelProvider.set(inetSocketAddress, channel);
+        }
+        return channel;
     }
 
     public void close(){
-
+        eventLoopGroup.shutdownGracefully();
     }
 }

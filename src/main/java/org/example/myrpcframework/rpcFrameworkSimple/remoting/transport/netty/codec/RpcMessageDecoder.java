@@ -4,7 +4,17 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import lombok.extern.slf4j.Slf4j;
+import org.example.myrpcframework.rpcFrameworkCommon.enums.CompressTypeEnums;
+import org.example.myrpcframework.rpcFrameworkCommon.enums.SerializationTypeEnums;
+import org.example.myrpcframework.rpcFrameworkCommon.extension.ExtensionLoader;
+import org.example.myrpcframework.rpcFrameworkSimple.compress.Compress;
 import org.example.myrpcframework.rpcFrameworkSimple.remoting.constants.RpcConstants;
+import org.example.myrpcframework.rpcFrameworkSimple.remoting.dto.RpcMessage;
+import org.example.myrpcframework.rpcFrameworkSimple.remoting.dto.RpcRequest;
+import org.example.myrpcframework.rpcFrameworkSimple.remoting.dto.RpcResponse;
+import org.example.myrpcframework.rpcFrameworkSimple.serialize.Serializer;
+
+import java.util.Arrays;
 
 /**
  * custom protocol decoder
@@ -58,6 +68,7 @@ public class RpcMessageDecoder extends LengthFieldBasedFrameDecoder {
         super(maxFrameLength, lengthFieldOffset, lengthFieldLength, lengthAdjustment, initialBytesToStrip);
     }
 
+    // decode函数
     @Override
     protected Object decode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
         Object decoded = super.decode(ctx, in);
@@ -78,20 +89,22 @@ public class RpcMessageDecoder extends LengthFieldBasedFrameDecoder {
         return decoded;
     }
 
+    // 把decode出来的信息重新组装成object
     private Object decodeFrame(ByteBuf in) {
         // note: must read ByteBuf in order
-        checkMagicNumber(in);
-        checkVersion(in);
-        int fullLength = in.readInt();
+        checkMagicNumber(in);  // 检查魔法数
+        checkVersion(in);      // 检查版本
+        int fullLength = in.readInt();  // full length的长度是一个int长度 4字节
         // build RpcMessage object
-        byte messageType = in.readByte();
-        byte codecType = in.readByte();
-        byte compressType = in.readByte();
-        int requestId = in.readInt();
+        byte messageType = in.readByte();  // 1byte
+        byte codecType = in.readByte();    // 1byte
+        byte compressType = in.readByte();  // 1byte
+        int requestId = in.readInt();   //  4byte
         RpcMessage rpcMessage = RpcMessage.builder()
                 .codec(codecType)
                 .requestId(requestId)
                 .messageType(messageType).build();
+        // 查看是不是心跳检测的消息
         if (messageType == RpcConstants.HEARTBEAT_REQUEST_TYPE) {
             rpcMessage.setData(RpcConstants.PING);
             return rpcMessage;
@@ -100,17 +113,18 @@ public class RpcMessageDecoder extends LengthFieldBasedFrameDecoder {
             rpcMessage.setData(RpcConstants.PONG);
             return rpcMessage;
         }
+        // 全长度 - 头部长度 = 正文长度
         int bodyLength = fullLength - RpcConstants.HEAD_LENGTH;
         if (bodyLength > 0) {
             byte[] bs = new byte[bodyLength];
             in.readBytes(bs);
-            // decompress the bytes
-            String compressName = CompressTypeEnum.getName(compressType);
+            // decompress the bytes  解压缩
+            String compressName = CompressTypeEnums.getName(compressType);
             Compress compress = ExtensionLoader.getExtensionLoader(Compress.class)
                     .getExtension(compressName);
             bs = compress.decompress(bs);
-            // deserialize the object
-            String codecName = SerializationTypeEnum.getName(rpcMessage.getCodec());
+            // deserialize the object  反序列化
+            String codecName = SerializationTypeEnums.getName(rpcMessage.getCodec());
             log.info("codec name: [{}] ", codecName);
             Serializer serializer = ExtensionLoader.getExtensionLoader(Serializer.class)
                     .getExtension(codecName);
@@ -128,7 +142,7 @@ public class RpcMessageDecoder extends LengthFieldBasedFrameDecoder {
 
     private void checkVersion(ByteBuf in) {
         // read the version and compare
-        byte version = in.readByte();
+        byte version = in.readByte();  // version就只有一个byte，直接读就可以
         if (version != RpcConstants.VERSION) {
             throw new RuntimeException("version isn't compatible" + version);
         }
@@ -140,6 +154,7 @@ public class RpcMessageDecoder extends LengthFieldBasedFrameDecoder {
         byte[] tmp = new byte[len];
         in.readBytes(tmp);
         for (int i = 0; i < len; i++) {
+            // 如果tmp里面哪一位和RpcConstants.MAGIC_NUMBER不同，说明magic code错误
             if (tmp[i] != RpcConstants.MAGIC_NUMBER[i]) {
                 throw new IllegalArgumentException("Unknown magic code: " + Arrays.toString(tmp));
             }
