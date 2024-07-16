@@ -1,10 +1,12 @@
 package org.example.myrpcframework.server.serviceImpl;
 
 import lombok.extern.slf4j.Slf4j;
+import org.example.myrpcframework.rpcFrameworkSimple.annotation.RpcService;
 import org.example.myrpcframework.serviceAPIs.AddCalculatorService;
 import org.example.myrpcframework.serviceAPIs.Numbers;
 
 @Slf4j
+@RpcService(group = "test1", version = "version1")  //用这个注解的话，这个服务会被自动注册
 public class AddCalculatorServiceImpl implements AddCalculatorService {
 
     static{

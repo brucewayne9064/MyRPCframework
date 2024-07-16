@@ -22,6 +22,7 @@ import org.example.myrpcframework.rpcFrameworkSimple.provider.Impl.ZkServiceProv
 import org.example.myrpcframework.rpcFrameworkSimple.provider.ServiceProvider;
 import org.example.myrpcframework.rpcFrameworkSimple.remoting.transport.netty.codec.RpcMessageDecoder;
 import org.example.myrpcframework.rpcFrameworkSimple.remoting.transport.netty.codec.RpcMessageEncoder;
+import org.springframework.stereotype.Component;
 
 import java.net.InetAddress;
 import java.util.concurrent.TimeUnit;
@@ -33,6 +34,7 @@ import java.util.concurrent.TimeUnit;
  */
 
 @Slf4j
+@Component
 public class NettyRpcServer {
     public static final int PORT = 9998;
 
