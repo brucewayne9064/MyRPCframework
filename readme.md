@@ -55,18 +55,19 @@
         └── Main.java
    
 myrpcframework
+│
 ├── MyRpCframeworkApplication.java
-├── client
+├── client (示例客户端)
 │     ├── CalculatorController.java
 │     ├── NettyClientMain.java
 │     └── SocketClientMain.java
-├── rpcFrameworkCommon
+├── rpcFrameworkCommon (工具)
 │     ├── enums
 │     ├── exception
 │     ├── extension
 │     ├── factory
 │     └── utils
-├── rpcFrameworkSimple
+├── rpcFrameworkSimple (核心实现)
 │     ├── annotation
 │     ├── compress
 │     ├── config
@@ -77,7 +78,7 @@ myrpcframework
 │     ├── remoting
 │     ├── serialize
 │     └── spring
-├── server
+├── server (示例服务器)
 │     ├── NettyServerMain.java
 │     ├── SocketServerMain.java
 │     └── serviceImpl
@@ -174,3 +175,12 @@ org/example/myrpcframework/server/NettyServerMain.java
 ```
 org/example/myrpcframework/client/NettyClientMain.java
 ```
+
+## 二、介绍
+
+详见wiki
+
+## 三、改进空间
+
+- 设计一个monitor，监控consumer和provider
+- https://github.com/Snailclimb/guide-rpc-framework
